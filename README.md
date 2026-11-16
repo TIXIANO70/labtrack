@@ -147,6 +147,14 @@ labtrack/
 
 ---
 
+## Documentación / Documentation
+
+- [Manual de Uso (MANUAL_DE_USUARIO.md)](./MANUAL_DE_USUARIO.md)
+- [Manual Técnico (MANUAL_TECNICO.md)](./MANUAL_TECNICO.md)
+- [Especificación Técnica (SPEC.md)](./SPEC.md)
+
+---
+
 ## Autor / Author
 
 - **Tiziano Espinoza** ([@TIXIANO70](https://github.com/TIXIANO70))  
