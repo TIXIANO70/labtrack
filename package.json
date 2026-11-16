@@ -1,15 +1,23 @@
 {
   "name": "labtrack",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Sistema de gestión y seguimiento de incidencias de hardware para laboratorios de informática",
   "type": "module",
   "main": "server/index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "start": "node server/index.js",
-    "dev:server": "nodemon server/index.js",
-    "dev:client": "cd client && npm run dev",
-    "test": "node --test",
-    "lint": "eslint ."
+    "dev": "concurrently -n API,WEB -c cyan,green \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "node --watch server/index.js",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "seed": "node server/seed.js",
+    "test:server": "node --test server/tests/*.test.js",
+    "test:client": "npm --prefix client test",
+    "test": "npm run test:server && npm run test:client",
+    "lint": "eslint server client/src"
   },
   "keywords": [
     "labtrack",
@@ -19,7 +27,20 @@
     "react",
     "maintenance-management"
   ],
-  "author": "Tiziano Espinoza <tixiano70@gmail.com>",
-  "license": "UNLICENSED",
-  "private": true
+  "author": "Tiziano Espinoza <tizianoespinoza60@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "eslint": "^9.14.0",
+    "globals": "^15.11.0"
+  },
+  "allowScripts": {
+    "better-sqlite3@11.10.0": true
+  }
 }

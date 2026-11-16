@@ -1,7 +1,7 @@
 # LabTrack – Especificación Técnica de Proyecto (SPEC)
 
 > **Autor:** Tiziano Espinoza (`TIXIANO70`)  
-> **Estado:** Fase de Diseño / Scaffolding Inicial  
+> **Estado:** Implementado y Verificado  
 > **Arquitectura:** Monolito desacoplado (Express ESM + SQLite `better-sqlite3` + React 18 SPA)
 
 ---
@@ -53,11 +53,15 @@ Todas las respuestas del servidor deben retornar formato JSON con la siguiente e
 
 | Método | Endpoint | Descripción | Códigos HTTP |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/incidencias` | Lista incidencias con soporte de filtros (`puestoId`, `estado`, `componente`, `prioridad`). | `200` |
-| `GET` | `/api/incidencias/:id` | Obtiene el detalle de un ticket específico. | `200`, `404` |
+| `GET` | `/api/health` | Verifica disponibilidad de API y conexión SQLite. | `200`, `503` |
+| `GET` | `/api/incidencias` | Lista incidencias con soporte de filtros (`puestoId`, `estado`, `componente`, `prioridad`, `q`, `soloRepuestos`, `soloActivas`, `limit`, `offset`). | `200`, `400` |
+| `GET` | `/api/incidencias/stats` | Métricas agregadas de salud y cola de repuestos. | `200` |
+| `GET` | `/api/incidencias/puestos` | Estado operativo y reincidencia agrupada por puesto físico. | `200` |
+| `GET` | `/api/incidencias/export` | Exportación CSV segura (RFC 4180 + BOM UTF-8). | `200`, `400` |
+| `GET` | `/api/incidencias/:id` | Obtiene el detalle de un ticket específico y su bitácora. | `200`, `404` |
 | `POST` | `/api/incidencias` | Registra una nueva falla (valida campos obligatorios). | `201`, `400` |
-| `PATCH` | `/api/incidencias/:id` | Actualiza estado, notas técnicas y repuestos. Si pasa a `RESUELTO`, asigna `fechaResolucion`. | `200`, `400`, `404` |
-| `DELETE` | `/api/incidencias/:id` | Da de baja o elimina un ticket erróneo de la base de datos. | `200`, `404` |
+| `PATCH` | `/api/incidencias/:id` | Actualiza estado, notas técnicas y repuestos. Si pasa a `RESUELTO` o `BAJA`, asigna `fechaResolucion`. | `200`, `400`, `404` |
+| `DELETE` | `/api/incidencias/:id` | Elimina un ticket erróneo (con guardia opcional `ADMIN_PIN` en header `x-admin-pin`). | `200`, `403`, `404` |
 
 ---
 
@@ -66,34 +70,61 @@ Todas las respuestas del servidor deben retornar formato JSON con la siguiente e
 ```text
 labtrack/
 ├── package.json
+├── eslint.config.js
+├── .env.example
 ├── SPEC.md
 ├── README.md
 ├── .gitignore
 ├── data/
 │   └── labtrack.db            # Base de datos SQLite local (excluida de git)
 ├── server/
-│   ├── index.js               # Punto de entrada Express ESM
-│   ├── db.js                  # Inicialización y DDL de SQLite
+│   ├── index.js               # Punto de entrada HTTP + cierre graceful
+│   ├── app.js                 # Express ESM, cabeceras CSP/seguridad y SPA static
+│   ├── config.js              # Carga de .env opcional y validación de puerto/CORS
+│   ├── db.js                  # Inicialización, pragmas WAL/FK y DDL SQLite
+│   ├── seed.js                # Script CLI idempotente de muestra
+│   ├── utils/
+│   │   └── validacion.js      # Validadores de dominio y escape CSV
+│   ├── models/
+│   │   └── incidencia.js      # Catálogos, límites y errores operacionales
+│   ├── repositories/
+│   │   └── incidenciaRepository.js # Queries preparadas y transacciones ACID
 │   ├── routes/
 │   │   └── incidencias.js     # Router REST
 │   ├── controllers/
 │   │   └── incidencias.js     # Controladores HTTP
 │   ├── services/
-│   │   └── incidencias.js     # Lógica de negocio y queries preparadas
-│   └── middlewares/
-│       └── errorHandler.js    # Manejo centralizado de excepciones
+│   │   └── incidencias.js     # Lógica de negocio y bitácora
+│   ├── middlewares/
+│   │   ├── errorHandler.js    # Manejo centralizado de excepciones
+│   │   └── security.js        # Rate limiter y guardia PIN opcional
+│   └── tests/
+│       └── incidencias.test.js
 └── client/
     ├── index.html
+    ├── package.json
     ├── vite.config.js
     └── src/
+        ├── main.jsx
         ├── App.jsx
+        ├── hooks/
+        │   └── useLabTrack.js
+        ├── constants/
+        │   └── catalogos.js
+        ├── styles/
+        │   └── app.css
         ├── components/
+        │   ├── StatCards.jsx
         │   ├── IncidenciaForm.jsx
-        │   ├── IncidenciaList.jsx
         │   ├── IncidenciaFilter.jsx
-        │   └── StatCards.jsx
-        └── services/
-            └── api.js         # Cliente HTTP fetch nativo
+        │   ├── IncidenciaList.jsx
+        │   ├── PuestosGrid.jsx
+        │   ├── IncidenciaDetailModal.jsx
+        │   └── HistorialTimeline.jsx
+        ├── services/
+        │   └── api.js         # Cliente HTTP fetch nativo
+        └── __tests__/
+            └── App.test.jsx
 ```
 
 ---

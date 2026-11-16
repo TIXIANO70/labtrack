@@ -1,20 +1,21 @@
 # Dependencias
 node_modules/
+client/node_modules/
 .pnp
 .pnp.js
 
-# Base de datos local (SQLite)
+# Base de datos local (SQLite / JSON / temporales)
 data/*.db
 data/*.db-journal
 data/*.db-wal
 data/*.db-shm
+data/*.json
+data/*.tmp
 
-# Variables de entorno
+# Variables de entorno (permitir plantilla .env.example)
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
 # Logs
 npm-debug.log*
@@ -25,6 +26,7 @@ logs/
 
 # Build & Bundling
 dist/
+client/dist/
 build/
 .cache/
 
